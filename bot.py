@@ -5,7 +5,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 
-BOT_TOKEN = "7914646524:AAGeBP-MXFQNr4EUjompez-m5X4aNwi344A"
+BOT_TOKEN = "7914646524:AAFj-dSQ3TsBz7i54srFPYOvrMuS1rJBA1w"
 TEAM_CHAT_ID = 0  # сюда позже вставим ID рабочего чата GRADBOOK
 
 bot = Bot(BOT_TOKEN)
