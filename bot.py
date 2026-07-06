@@ -14,11 +14,9 @@ from aiogram.types import (
     ReplyKeyboardRemove,
 )
 
+BOT_TOKEN = "7914646524:AAGeBP-MXFQNr4EUjompez-m5X4aNwi344A"
 
-BOT_TOKEN = "ВСТАВЬ_СЮДА_ТОКЕН_БОТА"
-
-TEAM_CHAT_ID = 0  # ID рабочего чата GRADBOOK добавим позже
-
+TEAM_CHAT_ID = 0
 
 bot = Bot(BOT_TOKEN)
 dp = Dispatcher()
@@ -78,10 +76,7 @@ async def start(message: Message, state: FSMContext):
 
 
 @dp.callback_query(F.data == "start_form")
-async def start_form(
-    callback: CallbackQuery,
-    state: FSMContext
-):
+async def start_form(callback: CallbackQuery, state: FSMContext):
 
     await callback.answer()
 
@@ -100,15 +95,13 @@ async def start_form(
     Form.place,
     F.data.in_({"school", "kindergarten"})
 )
-async def choose_place(
-    callback: CallbackQuery,
-    state: FSMContext
-):
+async def choose_place(callback: CallbackQuery, state: FSMContext):
 
-    if callback.data == "school":
-        place = "Школа"
-    else:
-        place = "Детский сад"
+    place = (
+        "Школа"
+        if callback.data == "school"
+        else "Детский сад"
+    )
 
     await state.update_data(place=place)
 
@@ -122,10 +115,7 @@ async def choose_place(
 
 
 @dp.message(Form.city)
-async def get_city(
-    message: Message,
-    state: FSMContext
-):
+async def get_city(message: Message, state: FSMContext):
 
     await state.update_data(
         city=message.text.strip()
@@ -139,9 +129,7 @@ async def get_city(
             "Укажите, из какого класса выпускаются дети?"
         )
 
-        await state.set_state(
-            Form.school_class
-        )
+        await state.set_state(Form.school_class)
 
     else:
 
@@ -149,16 +137,11 @@ async def get_city(
             "Введите ваше имя и фамилию."
         )
 
-        await state.set_state(
-            Form.full_name
-        )
+        await state.set_state(Form.full_name)
 
 
 @dp.message(Form.school_class)
-async def get_school_class(
-    message: Message,
-    state: FSMContext
-):
+async def get_school_class(message: Message, state: FSMContext):
 
     await state.update_data(
         school_class=message.text.strip()
@@ -168,16 +151,11 @@ async def get_school_class(
         "Введите ваше имя и фамилию."
     )
 
-    await state.set_state(
-        Form.full_name
-    )
+    await state.set_state(Form.full_name)
 
 
 @dp.message(Form.full_name)
-async def get_full_name(
-    message: Message,
-    state: FSMContext
-):
+async def get_full_name(message: Message, state: FSMContext):
 
     await state.update_data(
         full_name=message.text.strip()
@@ -190,16 +168,11 @@ async def get_full_name(
         reply_markup=contact_keyboard()
     )
 
-    await state.set_state(
-        Form.phone
-    )
+    await state.set_state(Form.phone)
 
 
 @dp.message(Form.phone, F.contact)
-async def get_phone_contact(
-    message: Message,
-    state: FSMContext
-):
+async def get_phone_contact(message: Message, state: FSMContext):
 
     phone = message.contact.phone_number
 
@@ -211,9 +184,7 @@ async def get_phone_contact(
 
 
 @dp.message(Form.phone)
-async def wrong_phone_input(
-    message: Message
-):
+async def wrong_phone_input(message: Message):
 
     await message.answer(
         "Пожалуйста, нажмите кнопку "
@@ -228,14 +199,9 @@ async def finish_form(
     phone: str
 ):
 
-    await state.update_data(
-        phone=phone
-    )
+    await state.update_data(phone=phone)
 
     data = await state.get_data()
-
-
-    # СОЗДАНИЕ ВЕТКИ В РАБОЧЕМ ЧАТЕ
 
     if TEAM_CHAT_ID:
 
@@ -250,173 +216,105 @@ async def finish_form(
                 f" | {data.get('school_class')}"
             )
 
-
         topic = await bot.create_forum_topic(
-
             chat_id=TEAM_CHAT_ID,
-
             name=topic_name[:128]
-
         )
-
 
         manager_text = (
-
             "🆕 Новая заявка GRADBOOK\n\n"
-
-            f"Имя и фамилия: "
-            f"{data.get('full_name')}\n"
-
-            f"Телефон: "
-            f"{data.get('phone')}\n"
-
-            f"Город: "
-            f"{data.get('city')}\n"
-
-            f"Тип: "
-            f"{data.get('place')}\n"
-
-            f"Класс: "
-            f"{data.get('school_class', '—')}\n\n"
-
+            f"Имя и фамилия: {data.get('full_name')}\n"
+            f"Телефон: {data.get('phone')}\n"
+            f"Город: {data.get('city')}\n"
+            f"Тип: {data.get('place')}\n"
+            f"Класс: {data.get('school_class', '—')}\n\n"
             "Статус: 🟢 Новый\n"
-
             "Менеджер: Не назначен"
-
         )
 
-
         await bot.send_message(
-
             chat_id=TEAM_CHAT_ID,
-
             text=manager_text,
-
-            message_thread_id=(
-                topic.message_thread_id
-            ),
-
+            message_thread_id=topic.message_thread_id,
             reply_markup=inline_keyboard(
-
                 [
                     (
                         "🟢 Забрать клиента",
                         "take_client"
                     )
                 ]
-
             )
-
         )
 
-
     await message.answer(
-
         "Спасибо за ваш ответ. "
         "Вот примеры наших альбомов с ценами.",
-
         reply_markup=ReplyKeyboardRemove()
-
     )
 
-
     await message.answer(
-
         "Если вы сомневаетесь в формате альбома, "
         "мы можем рассказать вам о преимуществах "
         "и особенностях.\n\n"
         "Хотите подробнее?",
-
         reply_markup=inline_keyboard(
-
             [("✅ Да", "details_yes")],
-
             [("Нет, спасибо", "details_no")]
-
         )
-
     )
-
 
     await state.clear()
 
 
 @dp.callback_query(F.data == "details_yes")
-async def details_yes(
-    callback: CallbackQuery
-):
+async def details_yes(callback: CallbackQuery):
 
     await callback.answer()
 
     await callback.message.answer(
-
         "📖 Планшет\n\n"
-
-        "Компактный и стильный формат "
-        "выпускного альбома.\n\n"
-
-        "Подходит, если хочется красивый "
-        "памятный альбом без лишнего объёма.\n\n"
-
+        "Компактный и стильный формат выпускного альбома.\n\n"
+        "Подходит, если хочется красивый памятный альбом "
+        "без лишнего объёма.\n\n"
         "📚 Стандарт\n\n"
-
-        "Более наполненный классический "
-        "выпускной альбом.\n\n"
-
+        "Более наполненный классический выпускной альбом.\n\n"
         "В нём больше страниц, фотографий "
         "и пространства для воспоминаний."
-
     )
 
-
     await callback.message.answer(
-
         "🎁 При заказе от 20 альбомов - "
         "альбом учителю в подарок!"
-
     )
 
 
 @dp.callback_query(F.data == "details_no")
-async def details_no(
-    callback: CallbackQuery
-):
+async def details_no(callback: CallbackQuery):
 
     await callback.answer()
 
     await callback.message.answer(
-
         "Спасибо! Ваш менеджер свяжется "
         "с вами и ответит на вопросы 😊"
-
     )
 
 
 @dp.callback_query(F.data == "take_client")
-async def take_client(
-    callback: CallbackQuery
-):
+async def take_client(callback: CallbackQuery):
 
     await callback.answer(
         "Клиент закреплен за вами"
     )
 
     await callback.message.edit_text(
-
         callback.message.text
-
         + f"\n\n✅ Менеджер: "
         f"{callback.from_user.full_name}"
-
         + "\nСтатус: 🟡 В работе"
-
     )
 
 
 async def main():
-
-    # Удаляем старый webhook.
-    # Это обязательно для запуска через polling.
 
     await bot.delete_webhook(
         drop_pending_updates=True
