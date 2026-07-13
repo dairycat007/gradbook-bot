@@ -237,17 +237,33 @@ async def get_city(message: Message, state: FSMContext):
     data = await state.get_data()
 
     if data.get("place") == "Школа":
-        await message.answer("Укажите, из какого класса выпускаются дети?")
+        await message.answer(
+            "Укажите, из какого класса выпускаются дети?",
+            reply_markup=inline_keyboard(
+                [("4 класс", "class_4")],
+                [("9 класс", "class_9")],
+                [("11 класс", "class_11")],
+            ),
+        )
         await state.set_state(Form.school_class)
     else:
         await message.answer("Введите ваше имя и фамилию.")
         await state.set_state(Form.full_name)
 
 
-@dp.message(Form.school_class)
-async def get_school_class(message: Message, state: FSMContext):
-    await state.update_data(school_class=message.text.strip())
-    await message.answer("Введите ваше имя и фамилию.")
+@dp.callback_query(
+    Form.school_class,
+    F.data.in_({"class_4", "class_9", "class_11"}),
+)
+async def get_school_class(callback: CallbackQuery, state: FSMContext):
+    class_map = {
+        "class_4": "4 класс",
+        "class_9": "9 класс",
+        "class_11": "11 класс",
+    }
+    await state.update_data(school_class=class_map[callback.data])
+    await callback.answer()
+    await callback.message.answer("Введите ваше имя и фамилию.")
     await state.set_state(Form.full_name)
 
 
