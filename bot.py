@@ -413,6 +413,13 @@ async def details_yes(callback: CallbackQuery):
         "🎁 При заказе от 20 альбомов — альбом учителю в подарок!"
     )
 
+    await callback.message.answer(
+        "Хотите связаться с менеджером, чтобы обсудить подробности?",
+        reply_markup=inline_keyboard(
+            [("✅ Да", "contact_manager_yes")],
+        ),
+    )
+
     asyncio.create_task(
         asyncio.to_thread(
             update_details_in_sheet,
@@ -433,7 +440,21 @@ async def details_no(callback: CallbackQuery):
         )
     )
     await callback.message.answer(
-        "Спасибо! Ваш менеджер свяжется с вами и ответит на вопросы 😊"
+        "Спасибо! Если захотите, можно сразу запросить связь с менеджером."
+    )
+    await callback.message.answer(
+        "Хотите связаться с менеджером, чтобы обсудить подробности?",
+        reply_markup=inline_keyboard(
+            [("✅ Да", "contact_manager_yes")],
+        ),
+    )
+
+
+@dp.callback_query(F.data == "contact_manager_yes")
+async def contact_manager_yes(callback: CallbackQuery):
+    await callback.answer()
+    await callback.message.answer(
+        "Спасибо! Первый освободившийся менеджер ответит вам."
     )
 
 
